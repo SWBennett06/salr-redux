@@ -91,7 +91,7 @@ QuickReplyBox.prototype.create = function(username, quote) {
     // Begin fetching and parsing the emotes as soon as we create the quick-reply
     this.emote_parser = new EmoteParser(this);
 
-    var html = `<div ${this.darkMode ? "class='salr-dark'" : ''} id="side-bar">` +
+    var html = `<div ${this.darkMode ? "class='salr-dark'" : ''} id="side-bar" role="toolbar">` +
                 '   <div id="sidebar-list">' +
                 '   </div>' +
                 '</div>' +
@@ -101,7 +101,7 @@ QuickReplyBox.prototype.create = function(username, quote) {
                 '      </div>' +
                 '   </div>' +
                 '</div>' +
-                `<div ${this.darkMode ? "class='salr-dark'" : ''} id="quick-reply"> ` +
+                `<div ${this.darkMode ? "class='salr-dark'" : ''} id="quick-reply" role="modal" aria-labelledby="title-bar" aria-modal="true"> ` +
                 '   <form id="quick-reply-form" enctype="multipart/form-data" action="newreply.php" name="vbform" method="POST" onsubmit="addThreadToCache(' + findThreadID() + '); return validate(this);">' +
                 '       <input id="quick-reply-action" type="hidden" name="action" value="postreply">' +
                 '       <input type="hidden" name="threadid" value="' + findThreadID() + '">' +
@@ -112,21 +112,25 @@ QuickReplyBox.prototype.create = function(username, quote) {
                 '           Quick Reply' +
                 '       </div>' +
                 '       <div id="view-buttons">' +
-                '          <a id="toggle-view"><img id="quick-reply-rollbutton" class="quick-reply-image" src="' + this.base_image_uri + "quick-reply-rolldown.gif" + '"></a>' +
-                '          <a id="dismiss-quick-reply"><img class="quick-reply-image" src="' + this.base_image_uri + "quick-reply-close.gif" + '"></a>' +
-                '       </div>' +
-                '       <div id="smiley-menu" class="sidebar-menu">' +
-                '           <img src="' + this.base_image_uri + "quick-reply-smiley.gif" + '" />' +
-                '       </div>' +
-                '       <div id="tag-menu" class="sidebar-menu">' +
-                '           <img src="' + this.base_image_uri + "quick-reply-tags.gif" + '" />' +
-                '       </div>' +
-                '       <div id="imgur-images-menu" class="sidebar-menu">' +
-                '           <img src="' + this.base_image_uri + "quick-reply-imgur.png" + '" />' +
+                '          <div tabIndex="0" role="button" id="toggle-view"><img id="quick-reply-rollbutton" class="quick-reply-image" src="' + this.base_image_uri + "quick-reply-rolldown.gif" + '"></div>' +
+                '          <div tabIndex="0" role="button" id="dismiss-quick-reply"><img class="quick-reply-image" src="' + this.base_image_uri + "quick-reply-close.gif" + '"></div>' +
                 '       </div>' +
                 '       <div id="post-input-field">' +
-                '           <textarea name="message" rows="18" size="10" id="post-message" tabindex="1">' +
+                '           <textarea name="message" rows="18" size="10" id="post-message">' +
                 '           </textarea>' +
+                '       </div>' +
+                '       <div id="submit-buttons">' +
+                '           <input type="submit" class="bginput" name="preview" value="Preview Reply">' +
+                '           <input type="submit" class="bginput" name="submit" value="Submit Reply">' +
+                '       </div>' +
+                '       <div tabIndex="0" role="button" id="smiley-menu" class="sidebar-menu">' +
+                '           <img src="' + this.base_image_uri + "quick-reply-smiley.gif" + '" />' +
+                '       </div>' +
+                '       <div tabIndex="0" role="button" id="tag-menu" class="sidebar-menu">' +
+                '           <img src="' + this.base_image_uri + "quick-reply-tags.gif" + '" />' +
+                '       </div>' +
+                '       <div tabIndex="0" role="button" id="imgur-images-menu" class="sidebar-menu">' +
+                '           <img src="' + this.base_image_uri + "quick-reply-imgur.png" + '" />' +
                 '       </div>' +
                 '       <div id="post-options">' +
                 '           <label>' +
@@ -155,10 +159,6 @@ QuickReplyBox.prototype.create = function(username, quote) {
                 '          </input>' +
                 '           </label>' +
                 '       </div>' +
-                '       <div id="submit-buttons">' +
-                '           <input type="submit" class="bginput" name="preview" value="Preview Reply" tabindex="3">' +
-                '           <input type="submit" class="bginput" name="submit" value="Submit Reply" tabindex="2">' +
-                '       </div>' +
                 '   </form>' +
                '</div>';
 
@@ -182,6 +182,12 @@ QuickReplyBox.prototype.create = function(username, quote) {
     });
 
     jQuery('div#quick-reply').addClass('modal');
+    
+    jQuery('div#quick-reply').keydown(function (event) {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            that.hide();
+        }
+    });
 
     jQuery('#title-bar').click(function() {
         that.toggleView();
@@ -208,6 +214,12 @@ QuickReplyBox.prototype.create = function(username, quote) {
     jQuery('.sidebar-menu').each(function() {
         jQuery(this).click(function() {
             that.toggleSidebar(jQuery(this));
+        });
+        jQuery(this).keydown(function(event) {
+            if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                that.toggleSidebar(jQuery(this));
+            }
         });
     });
 
@@ -579,17 +591,12 @@ QuickReplyBox.prototype.toggleView = function() {
 };
 
 QuickReplyBox.prototype.toggleSidebar = function(element) {
-    // restore focus to the message box so we can still see what was selected
-    document.getElementById('post-message').focus();
-
     var side_bar = jQuery("#side-bar").first();
 
     if(!side_bar.is(':visible')) {
         side_bar.css('display', 'block');
     }
 
-    var min = '20px';
-    var max = '525px';
     var populate_method = null;
     var that = this;
 
@@ -672,10 +679,6 @@ QuickReplyBox.prototype.notifyReplyReady = function(form_cookie) {
 
 QuickReplyBox.prototype.notifyFormKey = function(form_key) {
     jQuery('input[name="formkey"').attr('value', form_key);
-    /*postMessage({   'message': 'ChangeSetting',
-                    'option' : 'forumPostKey',
-                    'value'  : form_key
-    });*/
 };
 
 QuickReplyBox.prototype.setEmoteSidebar = function() {

@@ -195,7 +195,9 @@ div.sidebar-menu-item {
 
 div.sidebar-menu-item:hover {
     background: #ccc;
+    color: #333;
     cursor: pointer;
+    font-weight: 700;
 }
 
 div#post-warning {
