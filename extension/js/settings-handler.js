@@ -89,10 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultSettings['topPurchaseArchives']          = 'true';
     defaultSettings['topPurchaseNoAds']             = 'true';
     defaultSettings['topPurchaseUsername']          = 'true';
+    defaultSettings['topPurchaseDonatePatreon']     = 'true';
     defaultSettings['topPurchaseBannerAd']          = 'true';
     defaultSettings['topPurchaseEmoticon']          = 'true';
     defaultSettings['topPurchaseSticky']            = 'true';
     defaultSettings['topPurchaseGiftCert']          = 'true';
+    defaultSettings['topPurchaseDonations']         = 'true';
     defaultSettings['showNavigation']               = 'true';
     defaultSettings['topNavBar']                    = 'true';
     defaultSettings['bottomNavBar']                 = 'true';
@@ -387,6 +389,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 settingsPanel.style.display = 'none';
             }
             return false;
+        });
+    }
+
+    // Dark mode toggle
+    const stylesheets = document.head.getElementsByTagName('LINK');
+    const darkIdx = [...stylesheets].findIndex((stylesheet) => stylesheet.href.includes('somethingawful_dark.css'));
+    const elements = document.querySelectorAll('.dark-mode-toggle');
+    for (const element of elements) {
+        element.addEventListener('change', (e) => {
+            for (const innerElem of elements) {
+                innerElem.checked = e.target.checked;
+            }
+            stylesheets[darkIdx].disabled = !e.target.checked;
         });
     }
 });
